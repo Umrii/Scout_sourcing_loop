@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Scout — AI Expert Sourcing</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">◎ Scout</span>
+      <span class="tagline">extract → classify → enrich → route → outreach</span>
+    </div>
+    <div class="conn">
+      <span class="health"><i id="healthDot" class="dot"></i><span id="healthText">connecting…</span></span>
+      <input id="apiKey" class="key" type="password" placeholder="X-API-Key" autocomplete="off" spellcheck="false" />
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="source">Source</button>
+    <button class="tab-btn" data-tab="experts">Org memory</button>
+    <button class="tab-btn" data-tab="activity">Activity</button>
+  </nav>
+
+  <main>
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- ───────────── SOURCE ───────────── -->
+    <section id="tab-source" class="tab">
+      <div class="split">
+        <form id="briefForm" class="card form">
+          <h2>New sourcing run</h2>
+          <p class="sub">Define a research brief; Scout classifies every expert in org memory, ranks them, and drafts outreach for the shortlist.</p>
+          <label>Title<input id="b-title" required value="Carbon markets advisory" /></label>
+          <label>Description<textarea id="b-desc" rows="2" required>Sourcing experts on voluntary carbon markets, MRV and net-zero strategy.</textarea></label>
+          <label>Required domains <span class="muted">(comma-separated)</span><input id="b-domains" value="carbon markets" /></label>
+          <div class="row">
+            <label>Min seniority
+              <select id="b-seniority">
+                <option value="">any</option>
+                <option>junior</option><option>mid</option>
+                <option selected>senior</option><option>lead</option><option>exec</option>
+              </select>
+            </label>
+            <label># experts<input id="b-num" type="number" min="1" max="20" value="3" /></label>
+          </div>
+          <button class="primary" type="submit">Run sourcing →</button>
+        </form>
+
+        <div class="card pipeline">
+          <h2>The loop</h2>
+          <ol class="steps" id="steps">
+            <li data-step="classify"><b>Classify</b><span>relevance + scores per expert</span></li>
+            <li data-step="route"><b>Route</b><span>deterministic weighted rank</span></li>
+            <li data-step="enrich"><b>Enrich</b><span>rationale + sub-specialties</span></li>
+            <li data-step="outreach"><b>Outreach</b><span>personalised drafts</span></li>
+          </ol>
+          <div id="runMeta" class="run-meta"></div>
+        </div>
+      </div>
+
+      <div id="results"></div>
+    </section>
+
+    <!-- ───────────── ORG MEMORY ───────────── -->
+    <section id="tab-experts" class="tab hidden">
+      <div class="card">
+        <h2>Org memory</h2>
+        <p class="sub">Search experts Scout has already sourced — "have we seen carbon experts before?"</p>
+        <div class="searchbar">
+          <input id="s-domain" placeholder="domain or topic (e.g. carbon markets)" />
+          <select id="s-seniority">
+            <option value="">any seniority</option>
+            <option>junior</option><option>mid</option>
+            <option>senior</option><option>lead</option><option>exec</option>
+          </select>
+          <input id="s-q" placeholder="free text" />
+          <button id="searchBtn" class="primary">Search</button>
+        </div>
+        <div id="expertsResults" class="table-wrap"></div>
+      </div>
+
+      <details class="card">
+        <summary><b>Ingest a bio</b> — run the Extract agent live</summary>
+        <p class="sub">Paste a messy free-text bio; Extract returns a strict structured profile (missing info → null, never invented).</p>
+        <textarea id="ingestBio" rows="3" placeholder="e.g. Dr. Lena Park is a Senior Climate Economist at Meridian. 12 years on carbon markets. Based in Geneva."></textarea>
+        <button id="ingestBtn" class="primary">Extract &amp; store</button>
+        <pre id="ingestResult" class="json hidden"></pre>
+      </details>
+    </section>
+
+    <!-- ───────────── ACTIVITY ───────────── -->
+    <section id="tab-activity" class="tab hidden">
+      <div class="card">
+        <h2>Activity <span class="muted">— observability</span></h2>
+        <p class="sub">One row per agent call: stage, model, prompt version, latency, tokens, status.</p>
+        <div class="searchbar">
+          <select id="r-stage">
+            <option value="">all stages</option>
+            <option>extract</option><option>classify</option>
+            <option>enrich</option><option>outreach</option>
+          </select>
+          <button id="refreshRuns" class="primary">Refresh</button>
+        </div>
+        <div id="runsResults" class="table-wrap"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    All data is <b>synthetic</b> — no real experts. Backend: <span id="backend">—</span> ·
+    <a href="/docs" target="_blank">API docs</a>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

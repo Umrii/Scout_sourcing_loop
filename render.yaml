@@ -1,28 +1,32 @@
-# Render blueprint for Scout.
-# Secrets (GEMINI_API_KEY, DATABASE_URL) are set in the Render dashboard, not here.
+# Render blueprint for Scout. One-click deployable on the free plan.
+#
+# Out of the box this runs in mock-LLM + SQLite mode with the 45-expert pool
+# auto-seeded on boot — a fully working live demo, no secrets required.
+# To go to production, add DATABASE_URL (Supabase) and GEMINI_API_KEY in the
+# Render dashboard (see the deploy guide); the app picks them up automatically.
 services:
   - type: web
     name: scout
     runtime: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    # Seed the synthetic pool before the new version goes live (idempotent —
-    # skips if experts already exist). Remove if you seed manually.
-    preDeployCommand: "python -m scripts.seed"
     startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
         value: "3.11.9"
+      # Public demo key (data is synthetic). The bundled UI pre-fills this, so
+      # visitors can use it immediately. Change it in the dashboard to lock down.
       - key: API_KEY
-        generateValue: true        # Render generates a strong key
-      - key: DATABASE_URL
-        sync: false                # paste your Supabase connection string
-      - key: GEMINI_API_KEY
-        sync: false                # leave unset to run in deterministic mock mode
+        value: "dev-secret-key"
+      # Auto-load the synthetic pool on first boot (free tier has no pre-deploy
+      # hook and resets SQLite on cold start, so this keeps the demo populated).
+      - key: SEED_ON_START
+        value: "true"
       - key: GEMINI_MODEL
         value: "gemini-2.0-flash"
-      - key: LLM_MODE
-        value: ""                  # "" = auto (gemini if key present, else mock)
       - key: EXTRACT_PROMPT_VERSION
         value: "v2"
+      # DATABASE_URL and GEMINI_API_KEY are intentionally NOT set here — leaving
+      # them unset keeps the app on its safe defaults (SQLite + mock). Add them
+      # in the dashboard to switch to Supabase / real Gemini.

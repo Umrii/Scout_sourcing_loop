@@ -27,6 +27,26 @@ def ensure_pool() -> None:
         print(f"Generated synthetic pool -> {path}")
 
 
+def seed_if_empty() -> int:
+    """Direct-load the synthetic pool only if ``experts`` is empty.
+
+    Uses the ground-truth profiles (no LLM calls), so it's cheap enough to run on
+    every startup — the app calls this when ``SEED_ON_START`` is set. Returns the
+    number of experts inserted (0 if already populated).
+    """
+    init_db()
+    ensure_pool()
+    with session_scope() as session:
+        if session.query(ExpertRow).count():
+            return 0
+        records = SyntheticSource().fetch_records()
+        for r in records:
+            session.add(
+                profile_to_expert_row(r.expert, raw_bio=r.raw_bio, source=r.source)
+            )
+        return len(records)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Seed experts from the synthetic pool")
     parser.add_argument("--direct", action="store_true",

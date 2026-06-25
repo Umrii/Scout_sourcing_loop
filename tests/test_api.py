@@ -114,3 +114,12 @@ def test_runs_observability(client):
     classify_runs = client.get("/runs", params={"stage": "classify"}).json()
     assert all(r["stage"] == "classify" for r in classify_runs)
     assert all(r["latency_ms"] is not None for r in classify_runs)
+
+
+def test_frontend_is_served(client):
+    page = client.get("/", headers={"X-API-Key": ""})
+    assert page.status_code == 200
+    assert "text/html" in page.headers["content-type"]
+    assert "Scout" in page.text
+    assert client.get("/static/app.js").status_code == 200
+    assert client.get("/static/styles.css").status_code == 200

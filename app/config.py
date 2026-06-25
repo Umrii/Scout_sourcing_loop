@@ -36,6 +36,13 @@ class Settings(BaseSettings):
     # --- Integrations ---
     enrichment_provider: str = "stub"
 
+    # --- Bootstrap ---
+    # Direct-load the synthetic pool on startup if the experts table is empty.
+    # Off by default (local dev seeds explicitly); turn on for hosted demos —
+    # especially Render's free tier, where pre-deploy hooks don't run and the
+    # SQLite filesystem is reset on cold start.
+    seed_on_start: bool = False
+
     @property
     def resolved_llm_mode(self) -> Literal["gemini", "mock"]:
         """Effective LLM mode after applying the auto-detection rule."""
