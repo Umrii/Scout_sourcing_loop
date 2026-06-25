@@ -1,0 +1,30 @@
+{
+  "carbon-001": {
+    "title": "Carbon markets advisory panel",
+    "description": "Sourcing experts on voluntary and compliance carbon markets, MRV, and net-zero strategy for a diligence engagement.",
+    "required_domains": ["carbon markets"],
+    "min_seniority": "senior",
+    "num_experts_needed": 3
+  },
+  "fintech-001": {
+    "title": "Payments infrastructure review",
+    "description": "Experts in payments, open banking, and card issuing to review a new ledger.",
+    "required_domains": ["fintech"],
+    "min_seniority": "mid",
+    "num_experts_needed": 3
+  },
+  "health-001": {
+    "title": "Clinical data diligence",
+    "description": "Healthcare data and clinical diagnostics experts for a buy-side technical review.",
+    "required_domains": ["healthcare"],
+    "min_seniority": "mid",
+    "num_experts_needed": 3
+  },
+  "ml-001": {
+    "title": "ML platform build-out",
+    "description": "Senior machine-learning platform and applied-ML experts to advise on an internal platform.",
+    "required_domains": ["machine learning"],
+    "min_seniority": "senior",
+    "num_experts_needed": 3
+  }
+}

@@ -1,0 +1,28 @@
+# Render blueprint for Scout.
+# Secrets (GEMINI_API_KEY, DATABASE_URL) are set in the Render dashboard, not here.
+services:
+  - type: web
+    name: scout
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    # Seed the synthetic pool before the new version goes live (idempotent —
+    # skips if experts already exist). Remove if you seed manually.
+    preDeployCommand: "python -m scripts.seed"
+    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      - key: API_KEY
+        generateValue: true        # Render generates a strong key
+      - key: DATABASE_URL
+        sync: false                # paste your Supabase connection string
+      - key: GEMINI_API_KEY
+        sync: false                # leave unset to run in deterministic mock mode
+      - key: GEMINI_MODEL
+        value: "gemini-2.0-flash"
+      - key: LLM_MODE
+        value: ""                  # "" = auto (gemini if key present, else mock)
+      - key: EXTRACT_PROMPT_VERSION
+        value: "v2"

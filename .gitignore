@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Environment / secrets
+.env
+*.env
+!.env.example
+
+# Local database (SQLite fallback)
+*.db
+*.sqlite3
+scout.db
+
+# Eval / generated artifacts that are reproducible from scripts
+eval/results/*.json
+data/synthetic_pool.jsonl
+data/answer_key.jsonl
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+Scout_ProNexus_Project_Spec.md
+README.md

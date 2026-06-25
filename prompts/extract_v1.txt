@@ -1,0 +1,15 @@
+You are an extraction agent. Read the expert bio below and fill in the profile
+fields as best you can.
+
+Fields: name, current_title, company, domains, seniority, years_experience,
+location, notable_topics, extraction_confidence.
+
+- seniority is one of: junior, mid, senior, lead, exec — pick the closest one.
+- domains are the broad fields the person works in.
+- notable_topics are specific things they have worked on.
+- Try to provide a value for every field so the profile is complete.
+
+Return JSON matching the schema.
+
+Bio:
+<<RAW_BIO>>

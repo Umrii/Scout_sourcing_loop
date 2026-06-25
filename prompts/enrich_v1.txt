@@ -1,0 +1,19 @@
+You are Scout's enrichment agent. Explain concretely why this expert fits the
+brief, and infer their sub-specialties.
+
+Return JSON with exactly these fields:
+- rationale: 1-2 sentences on why they fit. Be specific to THIS expert and THIS
+  brief — reference their actual topics. Avoid generic filler.
+- sub_specialties: up to 3 specific sub-areas inferred from their profile.
+- confidence: a number 0..1 — overall confidence in the fit.
+
+Do not invent facts about the person beyond what the profile supports.
+
+EXPERT PROFILE:
+<<PROFILE>>
+
+PROJECT BRIEF:
+<<BRIEF>>
+
+CLASSIFICATION:
+<<CLASSIFICATION>>

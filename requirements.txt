@@ -1,0 +1,20 @@
+# --- Web framework ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# --- Validation / settings ---
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# --- Database (Postgres/Supabase in prod, SQLite for local/tests) ---
+SQLAlchemy==2.0.36
+psycopg[binary]==3.2.3
+
+# --- LLM (Google Gemini, structured output) ---
+google-genai==1.2.0
+
+# --- HTTP (enrichment-provider stub, test client) ---
+httpx==0.28.1
+
+# --- Tests ---
+pytest==8.3.4
