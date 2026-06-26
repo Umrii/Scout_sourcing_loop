@@ -121,5 +121,9 @@ def test_frontend_is_served(client):
     assert page.status_code == 200
     assert "text/html" in page.headers["content-type"]
     assert "Scout" in page.text
+    assert 'rel="icon"' in page.text
     assert client.get("/static/app.js").status_code == 200
     assert client.get("/static/styles.css").status_code == 200
+    favicon = client.get("/static/favicon.svg")
+    assert favicon.status_code == 200
+    assert "svg" in favicon.headers["content-type"]
