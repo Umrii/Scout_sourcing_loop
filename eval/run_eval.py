@@ -212,6 +212,29 @@ def print_diff(before: dict, after: dict) -> None:
     print("=" * 60)
 
 
+def write_consolidated(path: str, reports: list[dict], backend: str, dataset_size: int) -> None:
+    """Write one committed-baseline JSON: both versions + the headline delta."""
+    by_version = {r["version"]: r for r in reports}
+    payload = {
+        "backend": backend,
+        "model": reports[0]["model"],
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "dataset_size": dataset_size,
+        "versions": by_version,
+    }
+    if "v1" in by_version and "v2" in by_version:
+        v1, v2 = by_version["v1"], by_version["v2"]
+        payload["headline"] = {
+            "extraction_accuracy": {"v1": v1["extraction_accuracy"], "v2": v2["extraction_accuracy"]},
+            "hallucination_rate": {"v1": v1["hallucination_rate"], "v2": v2["hallucination_rate"]},
+            "delta_pts": round((v2["extraction_accuracy"] - v1["extraction_accuracy"]) * 100, 1),
+        }
+    out = Path(path)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(payload, indent=2))
+    print(f"\nWrote consolidated baseline -> {out}")
+
+
 # ──────────────────────────── CLI ────────────────────────────
 def main() -> None:
     parser = argparse.ArgumentParser(description="Scout extraction eval harness")
@@ -219,6 +242,7 @@ def main() -> None:
     parser.add_argument("--all", action="store_true",
                         help="score v1 and v2 and print the delta (the headline)")
     parser.add_argument("--no-write", action="store_true", help="skip DB/file writes")
+    parser.add_argument("--out", help="write a consolidated baseline JSON to this path")
     args = parser.parse_args()
 
     init_db()
@@ -237,6 +261,9 @@ def main() -> None:
 
     if len(reports) == 2:
         print_diff(reports[0], reports[1])
+
+    if args.out:
+        write_consolidated(args.out, reports, llm.name, len(dataset))
 
 
 if __name__ == "__main__":

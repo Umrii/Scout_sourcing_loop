@@ -24,6 +24,9 @@ scout.db
 
 # Eval / generated artifacts that are reproducible from scripts
 eval/results/*.json
+# Exception: the pinned real-Gemini baseline is committed (own line — gitignore
+# does not allow inline comments on a pattern).
+!eval/results/gemini_baseline.json
 data/synthetic_pool.jsonl
 data/answer_key.jsonl
 

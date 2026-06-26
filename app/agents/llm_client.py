@@ -60,13 +60,21 @@ class LLMClient(ABC):
 # ──────────────────────────── Gemini ────────────────────────────
 class GeminiClient(LLMClient):
     name = "gemini"
+    max_retries = 4      # retry transient 503/429s so a load spike can't skew evals
+    base_delay = 2.0     # seconds; doubles each attempt (2, 4, 8…)
 
     def __init__(self, api_key: str, model: str) -> None:
         # Imported lazily so the package isn't required for offline/mock runs.
         from google import genai
+        from google.genai import types
 
         self._genai = genai
-        self._client = genai.Client(api_key=api_key)
+        # Pin the Gemini Developer API v1beta endpoint, i.e.
+        # https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent
+        self._client = genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(api_version="v1beta"),
+        )
         self.model = model
 
     def complete_json(
@@ -83,31 +91,38 @@ class GeminiClient(LLMClient):
 
         started = time.perf_counter()
         meta = CallMeta(model=self.model, prompt_version=prompt_version)
-        try:
-            resp = self._client.models.generate_content(
-                model=self.model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    response_mime_type="application/json",
-                    response_schema=response_model,
-                    system_instruction=system,
-                    temperature=temperature,
-                ),
-            )
-            obj = resp.parsed
-            if obj is None:  # fall back to manual parse if SDK didn't hydrate
-                obj = response_model.model_validate(json.loads(resp.text))
-            usage = getattr(resp, "usage_metadata", None)
-            if usage is not None:
-                meta.input_tokens = getattr(usage, "prompt_token_count", None)
-                meta.output_tokens = getattr(usage, "candidates_token_count", None)
-            meta.latency_ms = _elapsed_ms(started)
-            return obj, meta
-        except Exception as exc:  # noqa: BLE001 — telemetry must capture all failures
-            meta.status = "error"
-            meta.error = f"{type(exc).__name__}: {exc}"
-            meta.latency_ms = _elapsed_ms(started)
-            raise LLMError(meta.error, meta) from exc
+        config = types.GenerateContentConfig(
+            response_mime_type="application/json",
+            response_schema=response_model,
+            system_instruction=system,
+            temperature=temperature,
+        )
+        last_exc: Exception | None = None
+        for attempt in range(self.max_retries):
+            try:
+                resp = self._client.models.generate_content(
+                    model=self.model, contents=prompt, config=config
+                )
+                obj = resp.parsed
+                if obj is None:  # fall back to manual parse if SDK didn't hydrate
+                    obj = response_model.model_validate(json.loads(resp.text))
+                usage = getattr(resp, "usage_metadata", None)
+                if usage is not None:
+                    meta.input_tokens = getattr(usage, "prompt_token_count", None)
+                    meta.output_tokens = getattr(usage, "candidates_token_count", None)
+                meta.latency_ms = _elapsed_ms(started)
+                return obj, meta
+            except Exception as exc:  # noqa: BLE001 — telemetry must capture all failures
+                last_exc = exc
+                if attempt < self.max_retries - 1 and _is_transient(exc):
+                    time.sleep(self.base_delay * (2 ** attempt))
+                    continue
+                break
+
+        meta.status = "error"
+        meta.error = f"{type(last_exc).__name__}: {last_exc}"
+        meta.latency_ms = _elapsed_ms(started)
+        raise LLMError(meta.error, meta) from last_exc
 
 
 # ──────────────────────────── Mock ────────────────────────────
@@ -195,6 +210,17 @@ def reset_llm_cache() -> None:
     """Drop the cached default so the next ``get_llm`` re-reads settings."""
     global _default
     _default = None
+
+
+def _is_transient(exc: Exception) -> bool:
+    """True for overload/rate-limit/timeout errors worth retrying."""
+    code = getattr(exc, "code", None)
+    text = str(exc).lower()
+    return code in (429, 500, 503) or any(
+        k in text
+        for k in ("unavailable", "high demand", "overloaded", "resource_exhausted",
+                  "rate limit", "try again", "timeout", "deadline", "503", "429")
+    )
 
 
 def _elapsed_ms(started: float) -> int:
