@@ -24,7 +24,7 @@ services:
       - key: SEED_ON_START
         value: "true"
       - key: GEMINI_MODEL
-        value: "gemini-3.5-flash"
+        value: "gemini-2.5-flash"
       - key: EXTRACT_PROMPT_VERSION
         value: "v2"
       # DATABASE_URL and GEMINI_API_KEY are intentionally NOT set here — leaving
